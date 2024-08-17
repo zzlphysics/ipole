@@ -9,7 +9,7 @@ $ ffmpeg -framerate 8 -i dump%*.png -s:v 1280x720 -c:v libx264 -profile:v high -
 """
 
 import matplotlib
-matplotlib.use("agg")
+# matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
@@ -71,68 +71,83 @@ if __name__ == "__main__":
 
     # create plots
     plt.close('all')
-    plt.figure(figsize=(8,8))
+    plt.figure(figsize=(8,8), dpi=300)
     ax1 = plt.subplot(2,2,1)
     ax2 = plt.subplot(2,2,2)
     ax3 = plt.subplot(2,2,3)
     ax4 = plt.subplot(2,2,4)
 
     # get mask for total intensity based on negative values
-    Imaskval = np.abs(I.min()) * 100.
-    Imaskval = np.nanmax(I) / np.power(I.shape[0],5.)
+    # Imaskval = np.abs(I.min()) * 100.
+    # Imaskval = np.nanmax(I) / np.power(I.shape[0],5.)
 
     # total intensity
-    vmax = 1.e-4
-    vmax = I.max() / np.sqrt(1.5)
-    im1 = ax1.imshow(I, cmap='afmhot', vmin=0., vmax=vmax, origin='lower', extent=extent)
+    Imax = 1.e-4
+    Imax = I.max() /np.sqrt(1.5)
+    im1 = ax1.imshow(I, cmap='afmhot', vmin=0., vmax=Imax, origin='lower', extent=extent)
     colorbar(im1)
 
-    # linear polarization fraction
-    lpfrac = 100.*np.sqrt(Q*Q+U*U)/I
-    lpfrac[np.abs(I)<Imaskval] = np.nan
-    ax2.set_facecolor('black')
-    im2 = ax2.imshow(lpfrac, cmap='jet', vmin=0., vmax=100., origin='lower', extent=extent)
+    Qmax = np.abs(Q.max()) if np.abs(Q.max()) > np.abs(Q.min()) else np.abs(Q.min())
+    Qmin = -Qmax
+    im2 = ax2.imshow(Q, cmap='seismic', vmin=Qmin, vmax=Qmax, origin='lower', extent=extent)
     colorbar(im2)
 
-    # circular polarization fraction
-    cpfrac = 100.*V/I
-    cpfrac[np.abs(I)<Imaskval] = np.nan
-    vext = max(np.abs(np.nanmin(cpfrac)),np.abs(np.nanmax(cpfrac)))
-    vext = max(vext, 1.)
-    if np.isnan(vext): vext = 10.
-    ax4.set_facecolor('black')
-    im4 = ax4.imshow(cpfrac, cmap='seismic', vmin=-vext, vmax=vext, origin='lower', extent=extent)
-    colorbar(im4)
-
-    # evpa
-    evpa = (180./3.14159)*0.5*np.arctan2(U,Q)
-    if evpa_0 == "W":
-      evpa += 90.
-      evpa[evpa > 90.] -= 180.
-    if EVPA_CONV == "NofW":
-      evpa += 90.
-      evpa[evpa > 90.] -= 180.
-    evpa2 = np.copy(evpa)
-    evpa2[np.abs(I)<Imaskval] = np.nan
-    ax3.set_facecolor('black')
-    im3 = ax3.imshow(evpa2, cmap='hsv', vmin=-90., vmax=90., origin='lower', extent=extent, interpolation='none')
+    Umax = np.abs(U.max()) if np.abs(U.max()) > np.abs(U.min()) else np.abs(U.min())
+    Umin = -Umax
+    im3 = ax3.imshow(U, cmap='seismic', vmin=Umin, vmax=Umax, origin='lower', extent=extent)
     colorbar(im3)
 
+    Vmax = np.abs(V.max()) if np.abs(V.max()) > np.abs(V.min()) else np.abs(V.min())
+    Vmin = -Vmax
+    im4 = ax4.imshow(V, cmap='seismic', vmin=Vmin, vmax=Vmax, origin='lower', extent=extent)
+    colorbar(im4)
+
+    # linear polarization fraction
+    # lpfrac = 100.*np.sqrt(Q*Q+U*U)/I
+    # lpfrac[np.abs(I)<Imaskval] = np.nan
+    # ax2.set_facecolor('black')
+    # im2 = ax2.imshow(lpfrac, cmap='jet', vmin=0., vmax=100., origin='lower', extent=extent)
+    # colorbar(im2)
+
+    # circular polarization fraction
+    # cpfrac = 100.*V/I
+    # cpfrac[np.abs(I)<Imaskval] = np.nan
+    # vext = max(np.abs(np.nanmin(cpfrac)),np.abs(np.nanmax(cpfrac)))
+    # vext = max(vext, 1.)
+    # if np.isnan(vext): vext = 10.
+    # ax4.set_facecolor('black')
+    # im4 = ax4.imshow(cpfrac, cmap='seismic', vmin=-vext, vmax=vext, origin='lower', extent=extent)
+    # colorbar(im4)
+
+    # evpa
+    # evpa = (180./3.14159)*0.5*np.arctan2(U,Q)
+    # if evpa_0 == "W":
+    #   evpa += 90.
+    #   evpa[evpa > 90.] -= 180.
+    # if EVPA_CONV == "NofW":
+    #   evpa += 90.
+    #   evpa[evpa > 90.] -= 180.
+    # evpa2 = np.copy(evpa)
+    # evpa2[np.abs(I)<Imaskval] = np.nan
+    # ax3.set_facecolor('black')
+    # im3 = ax3.imshow(evpa2, cmap='hsv', vmin=-90., vmax=90., origin='lower', extent=extent, interpolation='none')
+    # colorbar(im3)
+
     # quiver on intensity
-    npix = I.shape[0]
-    xs = np.linspace(-fov_muas/2,fov_muas/2,npix)
-    Xs,Ys = np.meshgrid(xs,xs)
-    lpscal = np.max(np.sqrt(Q*Q+U*U))
-    vxp = np.sqrt(Q*Q+U*U)*np.sin(evpa*3.14159/180.)/lpscal
-    vyp = -np.sqrt(Q*Q+U*U)*np.cos(evpa*3.14159/180.)/lpscal
-    skip = int(npix/32) 
-    ax1.quiver(Xs[::skip,::skip],Ys[::skip,::skip],vxp[::skip,::skip],vyp[::skip,::skip], 
-      headwidth=1, headlength=1, 
-      width=0.005,
-      color='#00ff00', 
-      units='width', 
-      scale=4,
-      pivot='mid')
+    # npix = I.shape[0]
+    # xs = np.linspace(-fov_muas/2,fov_muas/2,npix)
+    # Xs,Ys = np.meshgrid(xs,xs)
+    # lpscal = np.max(np.sqrt(Q*Q+U*U))
+    # vxp = np.sqrt(Q*Q+U*U)*np.sin(evpa*3.14159/180.)/lpscal
+    # vyp = -np.sqrt(Q*Q+U*U)*np.cos(evpa*3.14159/180.)/lpscal
+    # skip = int(npix/32) 
+    # ax1.quiver(Xs[::skip,::skip],Ys[::skip,::skip],vxp[::skip,::skip],vyp[::skip,::skip], 
+    #   headwidth=1, headlength=1, 
+    #   width=0.005,
+    #   color='#00ff00', 
+    #   units='width', 
+    #   scale=4,
+    #   pivot='mid')
 
     # command line output
     print("Flux [Jy]:    {0:g} {1:g}".format(I.sum()*scale, unpol.sum()*scale))
@@ -152,9 +167,9 @@ if __name__ == "__main__":
 
     # formatting and text
     ax1.set_title("Stokes I [cgs]")
-    ax2.set_title("LP [%]")
-    ax3.set_title("EVPA [deg]")
-    ax4.set_title("CP [%]")
+    ax2.set_title("Stokes Q [cgs]")
+    ax3.set_title("Stokes U [cgs]")
+    ax4.set_title("Stokes V [cgs]")
     ax1.set_aspect('equal')
     ax2.set_aspect('equal')
     ax3.set_aspect('equal')
@@ -166,6 +181,6 @@ if __name__ == "__main__":
 
     # saving
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-    # plt.show()
     plt.savefig(fname.replace(".h5",".png"))
+    plt.show()
 
