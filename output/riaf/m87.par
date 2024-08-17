@@ -1,0 +1,31 @@
+outfile image.h5
+a 0.9375
+Ne_unit 2e6
+Te_unit 10e10
+nth0 1
+Te0 1
+disk_h 0.3
+pow_nth -1.1
+pow_T -0.84
+keplerian_factor 1.0
+infall_factor 0.0
+fluid_dirction 1.0
+
+emission_type 1
+
+rcam 1000
+thetacam 17
+phicam 0
+rmax_geo 300
+
+fovx_dsource 160
+fovy_dsource 160
+
+nx 3000
+ny 3000
+
+dsource 16.8e6
+
+freqcgs 230.e9
+
+MBH 6.5e9
