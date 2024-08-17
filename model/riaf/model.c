@@ -31,6 +31,9 @@ double keplerian_factor = 1.;
 double infall_factor = 0.;
 double r_isco;
 
+// 逆时针or顺时针，默认为逆时针
+double fluid_dirction = 1.;
+
 /**
  * This is a template for analytic problems, which consist of prescription:
  * X,K -> 4-vectors Ucon/cov, Bcon/cov
@@ -40,7 +43,7 @@ double r_isco;
  * X,K -> e- density and temperature ne, Thetae
  */
 
-// Forward declarations for non-public functions
+// Forward declarations for non-public functions 非公开函数的声明
 void set_units();
 
 //// INITIALIZATION: Functions called from elsewhere in ipole ////
@@ -51,6 +54,7 @@ void set_units();
  * You can define new pairs here, skim what you need of ipole's defaults, or whatever
  * 
  * ipole will not warn on unspecified parameters. Have good defaults (set on declaration)
+ * ipole不会对未指定的参数发出警告。确保设置良好的默认值（在声明时设置）
  */
 void try_set_model_parameter(const char *word, const char *value)
 {
@@ -77,6 +81,8 @@ void try_set_model_parameter(const char *word, const char *value)
   // Inflow model parameters
   set_by_word_val(word, value, "keplerian_factor", &keplerian_factor, TYPE_DBL);
   set_by_word_val(word, value, "infall_factor", &infall_factor, TYPE_DBL);
+
+  set_by_word_val(word, value, "fluid_dirction", &fluid_dirction, TYPE_DBL);
 
   // Normal ipole pulls this, but we also need it for the GRRT problems
   // and this is easier than grabbing it from the 'params' struct
@@ -124,9 +130,11 @@ void set_units()
   Rin = Rh;
   Rout = rmax_geo;
 
+  fprintf(stderr, "Rin: %g, Rout %g\n", Rin, Rout);
+
   double z1 = 1. + pow(1. - a * a, 1. / 3.) * (pow(1. + a, 1. / 3.) + pow(1. - a, 1. / 3.));
   double z2 = sqrt(3. * a * a + z1 * z1);
-  r_isco = 3. + z2 - copysign(sqrt((3. - z1) * (3. + z1 + 2. * z2)), a);
+  r_isco = 3. + z2 - fluid_dirction* copysign(sqrt((3. - z1) * (3. + z1 + 2. * z2)), a);
   startx[0] = 0.0;
   startx[1] = log(Rin);
   startx[2] = 0.0;
@@ -226,7 +234,7 @@ void get_model_fourv(double X[NDIM], double Kcon[NDIM], double Ucon[NDIM], doubl
     flip_index(bl_Ucov, bl_gcon, bl_Ucon);
   } else if (r < r_isco) {
     // Inside r_isco, freefall
-    double omegaK_isco = 1. / (pow(r_isco, 3./2) + a);
+    double omegaK_isco = 1. / (fluid_dirction * pow(r_isco, 3./2) + a);
   
     // Get conserved quantities at the ISCO...
     double bl_Ucon_isco[NDIM], bl_Ucov_isco[NDIM];
@@ -283,7 +291,7 @@ void get_model_fourv(double X[NDIM], double Kcon[NDIM], double Ucon[NDIM], doubl
     bl_Ucon[3] = omega * ut;
   } else {
     // Outside r_isco, Keplerian
-    omegaK = 1. / (pow(r, 3./2) + a);
+    omegaK = 1. / (fluid_dirction * pow(r, 3./2) + a);
     omegaFF = bl_gcon[0][3] / bl_gcon[0][0];
 
     // Compromise
@@ -341,7 +349,7 @@ void get_model_fourv(double X[NDIM], double Kcon[NDIM], double Ucon[NDIM], doubl
   bl_Bcon[0] = 0.0;
   bl_Bcon[1] = 0.0;
   bl_Bcon[2] = 0.0;
-  bl_Bcon[3] = 1.0;
+  bl_Bcon[3] = fluid_dirction * 1.0;
 
   // Transform to KS coordinates,
   double ks_Bcon[NDIM];
