@@ -19,3 +19,4 @@ test-resources
 *.ppm
 *.mp4
 *.vtk
+*.log
