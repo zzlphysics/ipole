@@ -20,3 +20,5 @@ test-resources
 *.mp4
 *.vtk
 *.log
+*.out
+*.err

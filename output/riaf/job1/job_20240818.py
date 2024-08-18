@@ -167,7 +167,7 @@ def run_c_unpol(a, thetacam, Ne_unit, Te_unit, disk_h, MBH, pow_nth, pow_T, kepl
         '--keplerian_factor={}'.format(keplerian_factor),
         '--infall_factor={}'.format(infall_factor),
         '--fluid_dirction={}'.format(fluid_dirction),
-        '--outfile={}'.format("temp.h5")
+        '--outfile={}'.format("temp"+csv_filename+".h5")
     ]
     print("Ne_unit: ", Ne_unit)
     result = subprocess.run(cmd, capture_output=True, text=True)
