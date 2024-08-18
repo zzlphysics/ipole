@@ -14,15 +14,15 @@ fluid_dirction 1.0
 emission_type 1
 
 rcam 1000
-thetacam 17
+thetacam 163
 phicam 0
 rmax_geo 300
 
 fovx_dsource 160
 fovy_dsource 160
 
-nx 100
-ny 100
+nx 200
+ny 200
 
 dsource 16.8e6
 
