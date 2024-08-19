@@ -256,9 +256,12 @@ if __name__ == '__main__':
             
         try:
             # soln = root_scalar(nll, bracket=[1e3, 1e9], method='brentq', xtol = 1e-1,rtol = 2e-1, maxiter=50)
-            soln = root_scalar(nll, x0=1e5, x1=1e6, method='secant', xtol = 0.1,rtol = 0.2, maxiter=50)
+            soln = root_scalar(nll, x0=1e5, x1=1e6, method='secant', xtol = 0.1,rtol = 0.2, maxiter=20)
         except Exception as e:
             print("find root error:", e)
+            continue
+        if soln.converged == False or soln.root < 1e3 or soln.root > 1e12:
+            print("converge error or Ne_unit out of range")
             continue
         
         parsed_output = run_c(a,thetacam,soln.root,Te_unit,disk_h,MBH,pow_nth,pow_T,keplerian_factor,infall_factor,fluid_dirction,outfile)
