@@ -255,12 +255,12 @@ if __name__ == '__main__':
         nll = lambda args:run_c_unpol(a,thetacam,args,Te_unit,disk_h,MBH,pow_nth,pow_T,keplerian_factor,infall_factor,fluid_dirction,outfile)-0.6
             
         try:
-            # soln = root_scalar(nll, bracket=[1e3, 1e9], method='brentq', xtol = 1e-1,rtol = 2e-1, maxiter=50)
-            soln = root_scalar(nll, x0=1e5, x1=1e6, method='secant', xtol = 0.1,rtol = 0.2, maxiter=20)
+            soln = root_scalar(nll, bracket=[1e3, 1e10], method='brentq', xtol = 1e-1,rtol = 2e-2, maxiter=30)
+            # soln = root_scalar(nll, x0=1e5, x1=1e6, method='secant', xtol = 0.1,rtol = 0.02, maxiter=20)
         except Exception as e:
             print("find root error:", e)
             continue
-        if soln.converged == False or soln.root < 1e3 or soln.root > 1e12:
+        if soln.converged == False :#or soln.root < 1e3 or soln.root > 1e12:
             print("converge error or Ne_unit out of range")
             continue
         
