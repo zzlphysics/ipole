@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #SBATCH --job-name=ipole
-#SBATCH --nodes=2
+#SBATCH --nodes=3
 #SBATCH --ntasks-per-node=4
-#SBATCH --cpus-per-task=18
+#SBATCH --cpus-per-task=36
 #SBATCH --time=30-00:00:00
 #SBATCH --partition=72c512g
 #SBATCH --output=res_ipole_%j.out
@@ -12,15 +12,13 @@
 spack env activate ipole
 
 # 定义任务数量
-num_tasks=8
+num_tasks=12
 
 # 并行运行任务
 for i in $(seq 1 $num_tasks); do
-    srun --exclusive -n1 --output=res_ipole_%j_task${i}.out --error=res_ipole_%j_task${i}_%j.err \
+    srun --exclusive --ntasks=1 --nodes=1 --cpus-per-task=36 --output=res_ipole_%j_task${i}.out --error=res_ipole_%j_task${i}.err \
         python /home/zhangzelin/projects/ipole/output/riaf/job1/job_20240818.py \
         --run_count=4000 --csv_filename=task${i} --h5file_dir=files &
 done
 
 wait
-
-# 优化了python脚本，0819重新运行。
