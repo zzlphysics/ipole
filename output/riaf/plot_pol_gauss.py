@@ -76,10 +76,10 @@ if __name__ == "__main__":
     # 对 imagep 进行转置操作，改变其维度顺序。原数据的维度顺序假设为 (宽度, 高度, 通道数)，转置后变为 (高度, 宽度, 通道数)。
 
     # 分离偏振图像的各分量
-    I = imagep[:,:,0]
-    Q = imagep[:,:,1]
-    U = imagep[:,:,2]
-    V = imagep[:,:,3]
+    I = np.flip(imagep[:,:,0], axis=0)
+    Q = np.flip(imagep[:,:,1], axis=0)
+    U = np.flip(imagep[:,:,2], axis=0)
+    V = np.flip(imagep[:,:,3], axis=0)
     # 关闭HDF5文件
     hfp.close()
 
@@ -95,7 +95,16 @@ if __name__ == "__main__":
     k_cgs = 1.38064852e-16
     Tb = c_cgs**2/(2*freq**2*k_cgs) * I
 
-    convolved_image = gaussian_filter(Tb, sigma)
+    convolved_Tb = gaussian_filter(Tb, sigma)
+    convolved_Q = gaussian_filter(Q, sigma)
+    convolved_U = gaussian_filter(U, sigma)
+
+    # 如果在这里对图像进行rotation，和在进行计算时修改rotcam参数得到的偏振图像是否一致？
+
+    Tb_rot = rotate(Tb, 288, reshape=False)
+    Tb_rot[Tb_rot<0] = 0
+    con_rot = rotate(convolved_Tb, 288, reshape=False)
+    con_rot[con_rot<0] = 0
 
     # 设置图像显示范围
     if FOV_UNITS == "muas":
@@ -108,51 +117,134 @@ if __name__ == "__main__":
 
     # 创建图像
     plt.close('all')
-    plt.figure(figsize=(8,12), dpi=300)
+    plt.figure(figsize=(8,14), dpi=300)
     # 创建子图
-    ax1 = plt.subplot(3,2,1)
-    ax2 = plt.subplot(3,2,2)
-    ax3 = plt.subplot(3,2,3)
-    ax4 = plt.subplot(3,2,4)
-    ax5 = plt.subplot(3,2,5)
-    ax6 = plt.subplot(3,2,6)
+    ax1 = plt.subplot(5,2,1)
+    ax2 = plt.subplot(5,2,2)
+    ax3 = plt.subplot(5,2,3)
+    ax4 = plt.subplot(5,2,4)
+    ax5 = plt.subplot(5,2,5)
+    ax6 = plt.subplot(5,2,6)
+    ax7 = plt.subplot(5,2,7)
+    ax8 = plt.subplot(5,2,8)
+    ax9 = plt.subplot(5,2,9)
+    ax10 = plt.subplot(5,2,10)
 
+
+    # 图1，I
+    
     # 为总强度图像设置最大显示值
     Imax = 1.e-4
     Imax = I.max() /np.sqrt(1.5)
     # 显示总强度图像
-    im1 = ax1.imshow(I, cmap='afmhot', vmin=0., vmax=Imax, origin='lower', extent=extent)
+    im1 = ax1.imshow(I, cmap='afmhot', vmin=0., vmax=Imax, origin='upper', extent=extent)
     # 添加颜色条
     colorbar(im1)
+
+    # 图2，Q
 
     # 确定Q图像的显示范围
     Qmax = np.abs(Q.max()) if np.abs(Q.max()) > np.abs(Q.min()) else np.abs(Q.min())
     Qmin = -Qmax
     # 显示Q图像
-    im2 = ax2.imshow(Q, cmap='seismic', vmin=Qmin, vmax=Qmax, origin='lower', extent=extent)
+    im2 = ax2.imshow(Q, cmap='seismic', vmin=Qmin, vmax=Qmax, origin='upper', extent=extent)
     colorbar(im2)
+
+    # 图3，U
 
     # 确定U图像的显示范围
     Umax = np.abs(U.max()) if np.abs(U.max()) > np.abs(U.min()) else np.abs(U.min())
     Umin = -Umax
     # 显示U图像
-    im3 = ax3.imshow(U, cmap='seismic', vmin=Umin, vmax=Umax, origin='lower', extent=extent)
+    im3 = ax3.imshow(U, cmap='seismic', vmin=Umin, vmax=Umax, origin='upper', extent=extent)
     colorbar(im3)
+
+    # 图4，V
 
     # 确定V图像的显示范围
     Vmax = np.abs(V.max()) if np.abs(V.max()) > np.abs(V.min()) else np.abs(V.min())
     Vmin = -Vmax
     # 显示V图像
-    im4 = ax4.imshow(V, cmap='seismic', vmin=Vmin, vmax=Vmax, origin='lower', extent=extent)
+    im4 = ax4.imshow(V, cmap='seismic', vmin=Vmin, vmax=Vmax, origin='upper', extent=extent)
     colorbar(im4)
 
+    # 图5，Tb
+
     Tbmax = Tb.max()
-    im5 = ax5.imshow(Tb, cmap='afmhot', vmin=0., vmax=Tbmax, origin='lower', extent=extent)
+    im5 = ax5.imshow(Tb, cmap='afmhot', vmin=0., vmax=Tbmax, origin='upper', extent=extent)
     colorbar(im5)
 
-    Icmax = convolved_image.max()
-    im6 = ax6.imshow(convolved_image, cmap='afmhot', vmin=0., vmax=Icmax, origin='lower', extent=extent)
+    # 图6，convolved Tb
+
+    Icmax = convolved_Tb.max()
+    im6 = ax6.imshow(convolved_Tb, cmap='afmhot', vmin=0., vmax=Icmax, origin='upper', extent=extent)
     colorbar(im6)
+
+    # 图7，Tb rotated
+
+    im7 = ax7.imshow(Tb_rot, cmap='afmhot', vmin=0., vmax=Tbmax, origin='upper', extent=extent)
+    colorbar(im7)
+
+    # 图8，convolved Tb rotated
+
+    im8 = ax8.imshow(con_rot, cmap='afmhot', vmin=0., vmax=Icmax, origin='upper', extent=extent)
+    colorbar(im8)
+
+    # 图9，Tb with quiver
+
+    im9 = ax9.imshow(Tb, cmap='afmhot', vmin=0., vmax=Tbmax, origin='upper', extent=extent)
+    colorbar(im9)
+    # evpa
+    evpa = (180./3.14159)*0.5*np.arctan2(U,Q)
+    if evpa_0 == "W":
+      evpa += 90.
+      evpa[evpa > 90.] -= 180.
+    if EVPA_CONV == "NofW":
+      evpa += 90.
+      evpa[evpa > 90.] -= 180.
+    # quiver on intensity
+    npix = Tb.shape[0]
+    xs = np.linspace(-fov_muas/2,fov_muas/2,npix)
+    Xs,Ys = np.meshgrid(xs,xs)
+    lpscal = np.max(np.sqrt(Q*Q+U*U))
+    vxp = np.sqrt(Q*Q+U*U)*np.sin(evpa*np.pi/180.)/lpscal
+    vyp = -np.sqrt(Q*Q+U*U)*np.cos(evpa*np.pi/180.)/lpscal
+    skip = int(npix/32) 
+    ax9.quiver(Xs[::skip,::skip],Ys[::skip,::skip],vxp[::skip,::skip],vyp[::skip,::skip], 
+      headwidth=1, headlength=1, 
+      width=0.005,
+      color='#00ff00', 
+      units='width', 
+      scale=4,
+      pivot='mid')
+
+    # 图10，convolved Tb with quiver
+    im10 = ax10.imshow(convolved_Tb, cmap='afmhot', vmin=0., vmax=Icmax, origin='upper', extent=extent)
+    colorbar(im10)
+    # evpa
+    evpa_con = (180./3.14159)*0.5*np.arctan2(convolved_U,convolved_Q)
+    if evpa_0 == "W":
+      evpa_con += 90.
+      evpa_con[evpa_con > 90.] -= 180.
+    if EVPA_CONV == "NofW":
+      evpa_con += 90.
+      evpa_con[evpa_con > 90.] -= 180.
+    # quiver on intensity
+    npix = convolved_Tb.shape[0]
+    xs = np.linspace(-fov_muas/2,fov_muas/2,npix)
+    Xs,Ys = np.meshgrid(xs,xs)
+    lpscal_con = np.max(np.sqrt(convolved_Q*convolved_Q+convolved_U*convolved_U))
+    vxp = np.sqrt(convolved_Q*convolved_Q+convolved_U*convolved_U)*np.sin(evpa_con*np.pi/180.)/lpscal_con
+    vyp = -np.sqrt(convolved_Q*convolved_Q+convolved_U*convolved_U)*np.cos(evpa_con*np.pi/180.)/lpscal_con
+    skip = int(npix/16) 
+    ax10.quiver(Xs[::skip,::skip],Ys[::skip,::skip],vxp[::skip,::skip],vyp[::skip,::skip], 
+      headwidth=1, headlength=1, 
+      width=0.005,
+      color='#00ff00', 
+      units='width', 
+      scale=4,
+      pivot='mid')
+
 
     # linear polarization fraction
     # lpfrac = 100.*np.sqrt(Q*Q+U*U)/I
