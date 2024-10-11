@@ -205,7 +205,8 @@ if __name__ == "__main__":
     # quiver on intensity
     npix = Tb.shape[0]
     xs = np.linspace(-fov_muas/2,fov_muas/2,npix)
-    Xs,Ys = np.meshgrid(xs,xs)
+    ys = np.linspace(fov_muas/2,-fov_muas/2,npix)
+    Xs,Ys = np.meshgrid(xs,ys)
     lpscal = np.max(np.sqrt(Q*Q+U*U))
     vxp = np.sqrt(Q*Q+U*U)*np.sin(evpa*np.pi/180.)/lpscal
     vyp = -np.sqrt(Q*Q+U*U)*np.cos(evpa*np.pi/180.)/lpscal
@@ -232,7 +233,8 @@ if __name__ == "__main__":
     # quiver on intensity
     npix = convolved_Tb.shape[0]
     xs = np.linspace(-fov_muas/2,fov_muas/2,npix)
-    Xs,Ys = np.meshgrid(xs,xs)
+    ys = np.linspace(fov_muas/2,-fov_muas/2,npix)
+    Xs,Ys = np.meshgrid(xs,ys)
     lpscal_con = np.max(np.sqrt(convolved_Q*convolved_Q+convolved_U*convolved_U))
     vxp = np.sqrt(convolved_Q*convolved_Q+convolved_U*convolved_U)*np.sin(evpa_con*np.pi/180.)/lpscal_con
     vyp = -np.sqrt(convolved_Q*convolved_Q+convolved_U*convolved_U)*np.cos(evpa_con*np.pi/180.)/lpscal_con
