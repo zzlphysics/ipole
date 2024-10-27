@@ -14,6 +14,7 @@ test-resources
 *.p
 *.h5
 *.fits
+*.zip
 # Viz
 *.png
 *.ppm
