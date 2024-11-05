@@ -573,3 +573,88 @@ void h5io_add_data_dbl_3ds(hid_t fid, const char *path, hsize_t n1, hsize_t n2, 
   H5Dclose(dataset_id);
   H5Sclose(dataspace_id);
 }
+
+// Read string attribute
+int hdf5_read_attr_str(char *data, const char *att_name, const char *data_name, size_t max_len)
+{
+    char path[STRLEN];
+    strncpy(path, hdf5_cur_dir, STRLEN);
+    strncat(path, data_name, STRLEN - strlen(path));
+
+    fprintf(stderr, "Reading string attribute '%s' from path '%s'\n", att_name, path);
+
+    // Open the attribute
+    hid_t attribute_id = H5Aopen_by_name(file_id, path, att_name, H5P_DEFAULT, H5P_DEFAULT);
+    if (attribute_id < 0) {
+        fprintf(stderr, "Failed to open attribute '%s' at path '%s'\n", att_name, path);
+        FAIL((int) attribute_id, "hdf5_read_attr_str", path);
+    }
+
+    // Get the attribute's type and space
+    hid_t type_id = H5Aget_type(attribute_id);
+    hid_t space_id = H5Aget_space(attribute_id);
+
+    // Get the size of the string from the type
+    size_t str_size = H5Tget_size(type_id);
+    fprintf(stderr, "Attribute string size: %zu\n", str_size);
+
+    // Check if it's a variable-length string
+    H5T_class_t type_class = H5Tget_class(type_id);
+    htri_t is_vlen = H5Tis_variable_str(type_id);
+    
+    if (is_vlen > 0) {
+        fprintf(stderr, "Detected variable-length string\n");
+        // For variable-length strings, we need to use a different approach
+        char *temp_buf;
+        hid_t memtype = H5Tcopy(H5T_C_S1);
+        H5Tset_size(memtype, H5T_VARIABLE);
+        
+        herr_t status = H5Aread(attribute_id, memtype, &temp_buf);
+        if (status < 0) {
+            fprintf(stderr, "Failed to read variable-length string\n");
+            FAIL(status, "hdf5_read_attr_str", path);
+        }
+        
+        // Copy to output buffer with size check
+        if (strlen(temp_buf) >= max_len) {
+            fprintf(stderr, "Warning: string truncated from %zu to %zu bytes\n", 
+                    strlen(temp_buf), max_len-1);
+            strncpy(data, temp_buf, max_len-1);
+            data[max_len-1] = '\0';
+        } else {
+            strcpy(data, temp_buf);
+        }
+        
+        // Free the temporary buffer
+        H5free_memory(temp_buf);
+        H5Tclose(memtype);
+    } else {
+        fprintf(stderr, "Fixed-length string, size: %zu\n", str_size);
+        // For fixed-length strings
+        hid_t memtype = H5Tcopy(H5T_C_S1);
+        H5Tset_size(memtype, str_size);
+        
+        herr_t status = H5Aread(attribute_id, memtype, data);
+        if (status < 0) {
+            fprintf(stderr, "Failed to read fixed-length string\n");
+            FAIL(status, "hdf5_read_attr_str", path);
+        }
+        
+        // Ensure null termination
+        if (str_size < max_len) {
+            data[str_size] = '\0';
+        } else {
+            data[max_len-1] = '\0';
+        }
+        
+        H5Tclose(memtype);
+    }
+
+    // Clean up
+    H5Sclose(space_id);
+    H5Tclose(type_id);
+    H5Aclose(attribute_id);
+
+    // fprintf(stderr, "Successfully read string: %.50s...\n", data);
+    return 0;
+}

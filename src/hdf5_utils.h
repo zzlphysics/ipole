@@ -46,6 +46,7 @@ int hdf5_read_array_multidim(void *data, const char *name, size_t frank, hsize_t
 int hdf5_attr_exists(const char *data_name, const char *att_name);
 int hdf5_read_attr_num(void *data, const char *att_name, const char *data_name, hsize_t hdf5_type);
 int hdf5_read_attr_arr(void *data, const char *att_name, const char *data_name);
+int hdf5_read_attr_str(char *data, const char *att_name, const char *data_name, size_t max_len);
 
 // Convenience and annotations
 hid_t hdf5_make_str_type(size_t len);
