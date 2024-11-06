@@ -8,6 +8,7 @@
 int use_eKS_internal = 0;
 int metric = -1;
 double a, hslope; // mks
+double kzeta; // kz
 double poly_norm, poly_xt, poly_alpha, mks_smooth; // fmks
 double mks3R0, mks3H0, mks3MY1, mks3MY2, mks3MP0; // mks3
 
@@ -87,8 +88,11 @@ void bl_to_ks(double X[NDIM], double ucon_bl[NDIM], double ucon_ks[NDIM])
   MUNULOOP
     trans[mu][nu] = delta(mu, nu);
 
-  trans[0][1] = 2. * r / (r * r - 2. * r + a * a);
-  trans[3][1] = a / (r * r - 2. * r + a * a);
+  // trans[0][1] = 2. * r / (r * r - 2. * r + a * a);
+  // trans[3][1] = a / (r * r - 2. * r + a * a);
+
+  trans[0][1] = (2.*r + kzeta/r)/(r*r - 2.*r + a*a - kzeta/r);
+  trans[3][1] = a/(r*r - 2.*r + a*a - kzeta/r);
 
   MULOOP
     ucon_ks[mu] = 0.;
@@ -105,8 +109,11 @@ void ks_to_bl(double X[NDIM], double ucon_ks[NDIM], double ucon_bl[NDIM])
   MUNULOOP
     trans[mu][nu] = delta(mu, nu);
 
-  trans[0][1] = 2. * r / (r * r - 2. * r + a * a);
-  trans[3][1] = a / (r * r - 2. * r + a * a);
+  // trans[0][1] = 2. * r / (r * r - 2. * r + a * a);
+  // trans[3][1] = a / (r * r - 2. * r + a * a);
+
+  trans[0][1] = (2.*r + kzeta/r)/(r*r - 2.*r + a*a - kzeta/r);
+  trans[3][1] = a/(r*r - 2.*r + a*a - kzeta/r);
 
   invert_matrix(trans, rev_trans);
 
@@ -162,48 +169,89 @@ void gcov_func(double X[NDIM], double gcov[NDIM][NDIM])
 // compute KS metric at point (r,th) in KS coordinates (cyclic in t, ph)
 inline void gcov_ks(double r, double th, double gcov[NDIM][NDIM])
 {
+  // double cth = cos(th);
+  // double sth = sin(th);
+
+  // double s2 = sth * sth;
+  // double rho2 = r * r + a * a * cth * cth;
+
+  // MUNULOOP gcov[mu][nu] = 0.;
+  // // Compute KS metric from KS coordinates (cyclic in t,phi)
+  // gcov[0][0] = -1. + 2. * r / rho2;
+  // gcov[0][1] = 2. * r / rho2;
+  // gcov[0][3] = -2. * a * r * s2 / rho2;
+
+  // gcov[1][0] = gcov[0][1];
+  // gcov[1][1] = 1. + 2. * r / rho2;
+  // gcov[1][3] = -a * s2 * (1. + 2. * r / rho2);
+
+  // gcov[2][2] = rho2;
+
+  // gcov[3][0] = gcov[0][3];
+  // gcov[3][1] = gcov[1][3];
+  // gcov[3][3] = s2 * (rho2 + a * a * s2 * (1. + 2. * r / rho2));
+
   double cth = cos(th);
   double sth = sin(th);
-
-  double s2 = sth * sth;
-  double rho2 = r * r + a * a * cth * cth;
-
+  double sin2 = sth*sth;
+  double cos2 = cth*cth;
+  double rho2 = r*r + a*a*cos2;
+  double rho2r = r*rho2;
+  double mre = 2.0 * r*r + kzeta;
+  double mrre = -2.0*r*r*r*r - 3.0*r*r*kzeta + a*a*(2.0*r*r - kzeta)*cos2;
   MUNULOOP gcov[mu][nu] = 0.;
-  // Compute KS metric from KS coordinates (cyclic in t,phi)
-  gcov[0][0] = -1. + 2. * r / rho2;
-  gcov[0][1] = 2. * r / rho2;
-  gcov[0][3] = -2. * a * r * s2 / rho2;
 
-  gcov[1][0] = gcov[0][1];
-  gcov[1][1] = 1. + 2. * r / rho2;
-  gcov[1][3] = -a * s2 * (1. + 2. * r / rho2);
+  gcov[0][0] = -1.0 + mre/rho2r;
+  gcov[0][1] = mre/rho2r;
+  gcov[0][2] = 0.0;
+  gcov[0][3] = -((a*mre*sin2)/rho2r);
 
+  gcov[1][0] = mre/rho2r;
+  gcov[1][1] = 1.0 + mre/rho2r;
+  gcov[1][2] = 0.0;
+  gcov[1][3] = -((a*(mre + rho2r)*sin2)/rho2r);
+
+  gcov[2][0] = 0.0;
+  gcov[2][1] = 0.0;
   gcov[2][2] = rho2;
+  gcov[2][3] = 0.0;
 
-  gcov[3][0] = gcov[0][3];
-  gcov[3][1] = gcov[1][3];
-  gcov[3][3] = s2 * (rho2 + a * a * s2 * (1. + 2. * r / rho2));
+  gcov[3][0] = -((a*mre*sin2)/rho2r);
+  gcov[3][1] = -((a*(mre + rho2r)*sin2)/rho2r);
+  gcov[3][2] = 0.0;
+  gcov[3][3] = (r*(a*a + r*r)*(a*a + r*r)*sin2 + a*a*(-(r*(a*a + r*(-2.0 + r))) + kzeta)*sin2*sin2)/rho2r; 
 }
 
 inline void gcov_bl(double r, double th, double gcov[NDIM][NDIM])
 {
-  double sth, cth, s2, a2, r2, DD, mu;
+  double sth, cth, s2, c2, a2, r2, DD, mu;
   sth = fabs(sin(th));
   s2 = sth * sth;
   cth = cos(th);
+  c2 = cth*cth;
   a2 = a * a;
   r2 = r * r;
-  DD = 1. - 2. / r + a2 / r2;
-  mu = 1. + a2 * cth * cth / r2;
 
   MUNULOOP gcov[mu][nu] = 0.;
   // Compute BL metric from BL coordinates
-  gcov[0][0] = -(1. - 2. / (r * mu));
-  gcov[0][3] = -2. * a * s2 / (r * mu);
+  // gcov[0][0] = -(1. - 2. / (r * mu));
+  // gcov[0][3] = -2. * a * s2 / (r * mu);
+  // gcov[3][0] = gcov[0][3];
+  // gcov[1][1] = mu / DD;
+  // gcov[2][2] = r2 * mu;
+  // gcov[3][3] = r2 * sth * sth * (1. + a2 / r2 + 2. * a2 * s2 / (r2 * r * mu));
+
+  // gcov[0][0] = -1 + (2*Power(r,2) + \[Eta])/(Power(r,3) + Power(a,2)*r*Power(Cos(\[Theta]),2));
+  // gcov[1][1] = (Power(r,2) + Power(a,2)*Power(Cos(\[Theta]),2))/(Power(a,2) - 2*r + Power(r,2) - \[Eta]/r);
+  // gcov[2][2] = Power(r,2) + Power(a,2)*Power(Cos(\[Theta]),2);
+  // gcov[3][3] = Power(Sin(\[Theta]),2)*(Power(a,2) + Power(r,2) + (Power(a,2)*(2*Power(r,2) + \[Eta])*Power(Sin(\[Theta]),2))/(Power(r,3) + Power(a,2)*r*Power(Cos(\[Theta]),2)));
+  // gcov[0][3] = -((a*(2*Power(r,2) + \[Eta])*Power(Sin(\[Theta]),2))/(Power(r,3) + Power(a,2)*r*Power(Cos(\[Theta]),2)));
+  gcov[0][0] = -1 + (2*r2 + kzeta)/(r2*r + a2*r*c2);
+  gcov[1][1] = (r2 + a2*c2)/(a2 - 2*r + r2 - kzeta/r);
+  gcov[2][2] = r2 + a2*c2;
+  gcov[3][3] = s2* (a2 + r2 + (a2*(2*r2 + kzeta)*s2) / (r2*r + a2*r*c2));
+  gcov[0][3] = -((a*(2*r2 + kzeta)*s2)/(r2*r + a2*r*c2));
   gcov[3][0] = gcov[0][3];
-  gcov[1][1] = mu / DD;
-  gcov[2][2] = r2 * mu;
-  gcov[3][3] = r2 * sth * sth * (1. + a2 / r2 + 2. * a2 * s2 / (r2 * r * mu));
 
 }
 

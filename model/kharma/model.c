@@ -94,9 +94,6 @@ static double polar_cut = -1;
 static double th_beg = 0.0174;
 static int nloaded = 0;
 
-static bool single_precision_output = false;
-
-
 static hdf5_blob fluid_header = { 0 };
 
 struct of_data {
@@ -307,6 +304,9 @@ void init_model(double *tA, double *tB)
   fprintf(stderr, "Determining dump file type... ");
   get_dumpfile_type(fnam, dumpmin);
 
+  // 先初始化为0
+  kzeta = 0.0;
+
   // set up grid for fluid data
   fprintf(stderr, "Reading data header...\n");
   init_grid(fnam, dumpmin);
@@ -328,7 +328,18 @@ void init_model(double *tA, double *tB)
   #endif // SLOW_LIGHT
 
   // horizon radius
-  Rh = 1 + sqrt(1. - a * a);
+  // Rh = 1 + sqrt(1. - a * a);
+  if ((-4.0*pow(a,4) + 4.0*pow(a,6) - 36.0*a*a*kzeta + kzeta*(32.0 + 27.0*kzeta))>=0){               
+    Rh = ((4.0 - (2.0*(-4.0 + 3.0*a*a))/
+            pow(8.0 - 9.0*a*a + (27.0*kzeta)/2.0 + (3.0*sqrt(3.0)*
+            sqrt(-4.0*pow(a,4) + 4.0*pow(a,6) - 36.0*a*a*kzeta + kzeta*(32.0 + 27.0*kzeta)))/2.,0.3333333333333333) + 
+            pow(2,0.6666666666666666)*pow(16.0 - 18.0*a*a + 27.0*kzeta + 
+            3.0*sqrt(3.0)*sqrt(-4.0*pow(a,4) + 4.0*pow(a,6) - 36.0*a*a*kzeta + kzeta*(32.0 + 27.0*kzeta)),0.3333333333333333))/6.0);
+  } else {
+    Rh = 0.6666666666666666 + (2.0*sqrt(1.3333333333333333 - pow(a,2))*cos(acos((3.0*sqrt(3.0)*(0.5925925925925926 - (2.0*pow(a,2))/3.0 + kzeta))/
+            (2.0*pow(1.3333333333333333 - pow(a,2),1.5)))/3.0))/sqrt(3.0);
+  } 
+  fprintf(stderr, "Rh = %e\n", Rh);
 
   // possibly cut around the pole
   if (polar_cut >= 0) {
@@ -1299,6 +1310,11 @@ void init_kharma_grid(char *fnam, int dumpidx)
   a = get_param_double(par_string, "coordinates", "a", 0.9375);
   Rin = get_param_double(par_string, "coordinates", "r_in", 1.185);
   Rout = get_param_double(par_string, "coordinates", "r_out", 1000.0);
+
+  if (strcmp(base, "spherical_kz") == 0) {
+    kzeta = get_param_double(par_string, "coordinates", "kzeta", 0.0);
+    fprintf(stderr, "kzeta = %e\n", kzeta);
+  }
 
   if (strcmp(transform, "mks") == 0) {
     metric = METRIC_MKS;
