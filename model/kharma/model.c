@@ -1641,6 +1641,10 @@ void output_hdf5()
   hdf5_write_single_val(&(data[0]->t), "t", H5T_IEEE_F64LE);
 #endif
 
+  hdf5_write_single_val(&a, "spin", H5T_IEEE_F64LE);
+  hdf5_write_single_val(&kzeta, "kzeta", H5T_IEEE_F64LE);
+  hdf5_write_single_val(&Rin, "Rin", H5T_IEEE_F64LE);
+  hdf5_write_single_val(&Rout, "Rout", H5T_IEEE_F64LE);
   hdf5_write_single_val(&sigma_cut, "sigma_cut", H5T_IEEE_F64LE);
   hdf5_make_directory("electrons");
   hdf5_set_directory("/header/electrons/");
