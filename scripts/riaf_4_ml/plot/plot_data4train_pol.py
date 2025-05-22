@@ -86,9 +86,9 @@ if __name__ == "__main__":
     # sigma(pix) = npix = ...... 
     nx = I.shape[0]
     rad2muas = np.pi/180/3600/1000000
-    sigma = 10 / (2 * np.sqrt(2 * np.log(2))) / ((dx*lunit/nx)/(dsource)/rad2muas)
+    sigma = 20 / (2 * np.sqrt(2 * np.log(2))) / ((dx*lunit/nx)/(dsource)/rad2muas)
 
-    Ic = gaussian_filter(I, sigma)
+    # Ic = gaussian_filter(I, sigma)
 
     # c_cgs = 2.99792458e10
     # k_cgs = 1.38064852e-16
@@ -114,53 +114,60 @@ if __name__ == "__main__":
       # 如果视场单位未被识别，则输出错误信息并退出
       print("! unrecognized units for FOV {0:s}. quitting.".format(FOV_UNITS))
 
+    # 使用I.max()作为最大值,将I,Q,U,V进行归一化，合并为一个数组，并保存为npy文件
+    I_normalized = (I / I.max() )
+    Q_normalized = (Q / I.max() )
+    U_normalized = (U / I.max() )
+    V_normalized = (V / I.max() )
+    np.save(fname.replace(".h5", "_normalized.npy"), np.array([I_normalized, Q_normalized, U_normalized, V_normalized]))
+
     # 将数组 I 转换为图像，并设置颜色映射
-    I_normalized = (I / I.max() * 255).astype(np.uint8)  # 归一化到 0-255 范围
-    image_I = Image.fromarray(I_normalized, mode='L')  # 创建灰度图像
+    # I_normalized = (I / I.max() * 255).astype(np.uint8)  # 归一化到 0-255 范围
+    # image_I = Image.fromarray(I_normalized, mode='L')  # 创建灰度图像
 
     # 保存图像为 320x320 像素，避免插值
-    image_I.save(fname.replace(".h5", "_I.png"))
+    # image_I.save(fname.replace(".h5", "_I.png"))
 
     # Ic_normalized = (Ic / Ic.max() * 255).astype(np.uint8)  # 归一化到 0-255 范围
     # image_Ic = Image.fromarray(Ic_normalized, mode='L')  # 创建灰度图像
 
-    # # # 保存图像为 320x320 像素，避免插值
+    # # 保存图像为 320x320 像素，避免插值
     # image_Ic.save(fname.replace(".h5", "_Ic.png"))
 
-    # plt.close('all')
-    # plt.figure(figsize=(320/100,320/100), dpi=100)
-    # ax1 = plt.subplot(1,1,1)
-    # ax1.axis('off')
-    # Imax = I.max()
-    # im1 = ax1.imshow(I, cmap='afmhot', vmin=0., vmax=Imax, origin='upper', extent=extent, interpolation='none')
-    # plt.savefig(fname.replace(".h5","_I.png"), bbox_inches='tight', pad_inches=0, dpi=100)
+    plt.close('all')
+    plt.figure(figsize=(2,2), dpi=160)
+    ax1 = plt.subplot(1,1,1)
+    ax1.axis('off')
+    Imax = I.max()
+    im1 = ax1.imshow(I, cmap='afmhot', vmin=0., vmax=Imax, origin='upper', extent=extent, interpolation='none')
+    plt.savefig(fname.replace(".h5","_I.png"), bbox_inches='tight', pad_inches=0, dpi=100)
 
-    # plt.close('all')
-    # plt.figure(figsize=(2,2), dpi=160)
-    # ax2 = plt.subplot(1,1,1)
-    # ax2.axis('off')
-    # Qmax = np.abs(Q.max()) if np.abs(Q.max()) > np.abs(Q.min()) else np.abs(Q.min())
-    # Qmin = -Qmax
-    # im2 = ax2.imshow(Q, cmap='seismic', vmin=Qmin, vmax=Qmax, origin='upper', extent=extent, interpolation='none')
-    # plt.savefig(fname.replace(".h5","_Q.png"), bbox_inches='tight', pad_inches=0, dpi=160)
+    plt.close('all')
+    plt.figure(figsize=(2,2), dpi=160)
+    ax2 = plt.subplot(1,1,1)
+    ax2.axis('off')
+    Qmax = I.max() #np.abs(Q.max()) if np.abs(Q.max()) > np.abs(Q.min()) else np.abs(Q.min())
+    Qmin = -Qmax
+    im2 = ax2.imshow(Q, cmap='seismic', vmin=Qmin, vmax=Qmax, origin='upper', extent=extent, interpolation='none')
+    plt.savefig(fname.replace(".h5","_Q.png"), bbox_inches='tight', pad_inches=0, dpi=160)
 
-    # plt.close('all')
-    # plt.figure(figsize=(2,2), dpi=160)
-    # ax3 = plt.subplot(1,1,1)
-    # ax3.axis('off')
-    # Umax = np.abs(U.max()) if np.abs(U.max()) > np.abs(U.min()) else np.abs(U.min())
-    # Umin = -Umax
-    # im3 = ax3.imshow(U, cmap='seismic', vmin=Umin, vmax=Umax, origin='upper', extent=extent, interpolation='none')
-    # plt.savefig(fname.replace(".h5","_U.png"), bbox_inches='tight', pad_inches=0, dpi=160)
+    plt.close('all')
+    plt.figure(figsize=(2,2), dpi=160)
+    ax3 = plt.subplot(1,1,1)
+    ax3.axis('off')
+    Umax = I.max() #np.abs(U.max()) if np.abs(U.max()) > np.abs(U.min()) else np.abs(U.min())
+    Umin = -Umax
+    im3 = ax3.imshow(U, cmap='seismic', vmin=Umin, vmax=Umax, origin='upper', extent=extent, interpolation='none')
+    plt.savefig(fname.replace(".h5","_U.png"), bbox_inches='tight', pad_inches=0, dpi=160)
 
-    # plt.close('all')
-    # plt.figure(figsize=(2,2), dpi=160)
-    # ax4 = plt.subplot(1,1,1)
-    # ax4.axis('off')
-    # Vmax = np.abs(V.max()) if np.abs(V.max()) > np.abs(V.min()) else np.abs(V.min())
-    # Vmin = -Vmax
-    # im4 = ax4.imshow(V, cmap='seismic', vmin=Vmin, vmax=Vmax, origin='upper', extent=extent, interpolation='none')
-    # plt.savefig(fname.replace(".h5","_V.png"), bbox_inches='tight', pad_inches=0, dpi=160)
+    plt.close('all')
+    plt.figure(figsize=(2,2), dpi=160)
+    ax4 = plt.subplot(1,1,1)
+    ax4.axis('off')
+    Vmax = I.max() #np.abs(V.max()) if np.abs(V.max()) > np.abs(V.min()) else np.abs(V.min())
+    Vmin = -Vmax
+    im4 = ax4.imshow(V, cmap='seismic', vmin=Vmin, vmax=Vmax, origin='upper', extent=extent, interpolation='none')
+    plt.savefig(fname.replace(".h5","_V.png"), bbox_inches='tight', pad_inches=0, dpi=160)
 
     # plt.close('all')
     # plt.figure(figsize=(2,2), dpi=160)

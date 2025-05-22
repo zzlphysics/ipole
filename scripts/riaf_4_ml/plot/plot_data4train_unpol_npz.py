@@ -5,7 +5,7 @@
 """
 
 import matplotlib
-matplotlib.use("Agg")
+# matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
@@ -13,6 +13,8 @@ import sys
 from scipy.ndimage import rotate
 from scipy.ndimage import gaussian_filter
 from PIL import Image
+import pandas as pd
+import os
 
 
 ## configuration / plot parameters
@@ -38,6 +40,9 @@ def colorbar(mappable):
 # 当模块作为主程序运行时
 if __name__ == "__main__":
 
+  # 读取csv文件
+  df = pd.read_csv("/root/Projects/ipole/output/riaf/job1/output20250102.csv")
+
   # 遍历命令行参数中除脚本名外的每个文件名
   for fname in sys.argv[1:]:
 
@@ -48,47 +53,115 @@ if __name__ == "__main__":
     # 输出当前正在处理的文件名
     print("plotting {0:s}".format(fname))
 
+    base_filename = os.path.basename(fname)
+
+    # 根据文件名获取参数,csv第一列为文件名
+    params = df[df['filename'] == base_filename]
+    # print(params)
+
+    # 获取参数
+    a = params['a'].values[0]
+    Te_unit = params['Te_unit'].values[0]
+    disk_h = params['disk_h'].values[0]
+    MBH = params['MBH'].values[0]
+    keplerian_factor = params['keplerian_factor'].values[0]
+    fluid_dirction = params['fluid_dirction'].values[0]
+
+    # print("a: ", a)
+    # print("Te_unit: ", Te_unit)
+    # print("disk_h: ", disk_h)
+    # print("MBH: ", MBH)
+    # print("keplerian_factor: ", keplerian_factor)
+    # print("fluid_dirction: ", fluid_dirction)
+
     # 加载HDF5文件
     hfp = h5py.File(fname,'r')    
     # 从文件中读取所需元数据
-    dx = hfp['header']['camera']['dx'][()]
-    dsource = hfp['header']['dsource'][()]
-    lunit = hfp['header']['units']['L_unit'][()]
+    # dx = hfp['header']['camera']['dx'][()]
+    # dsource = hfp['header']['dsource'][()]
+    # lunit = hfp['header']['units']['L_unit'][()]
     # 计算视场大小（以微弧秒为单位）
-    fov_muas = dx / dsource * lunit * 2.06265e11
+    # fov_muas = dx / dsource * lunit * 2.06265e11
     # 读取缩放因子
     scale = hfp['header']['scale'][()]
-    freq = hfp['header']['freqcgs'][()]
-    # 初始化电矢量位置角
-    evpa_0 = 'W'
-    # 如果文件中存在电矢量位置角，则读取之
-    if 'evpa_0' in hfp['header']:
-      evpa_0 = hfp['header']['evpa_0'][()]
-    # 读取未偏振光强度图像
+
     unpol = np.copy(hfp['unpol']).transpose((1,0))
+
+    I = np.flip(unpol, axis=0)
+
+    flux = unpol.sum()*scale
+    # print("flux: ", flux)
+
+    hfp.close()
+
+    pa = np.random.randint(0, 360)
+    # print("pa: ", pa)
+
+    I_rot = rotate(I, pa, reshape=False)
+
+    parm_array = np.array([a, np.log10(Te_unit), disk_h, MBH, keplerian_factor, fluid_dirction, pa])
+    # print("parm_array: ", parm_array)
+    sigma = np.sqrt(1/12)
+    mean_parm_array = np.array([0, 11, 0.45, 6.5e9, 0.5, 0, 180])
+    std_parm_array = np.array([2*sigma, 2*sigma, 0.7*sigma, 3e9*sigma, 1*sigma, 1, 360*sigma])
+
+    normalized_parm_array = (parm_array - mean_parm_array) / std_parm_array
+
+    # print("normalized_parm_array: ", normalized_parm_array)
+
+    # original_parm_array = normalized_parm_array * std_parm_array + mean_parm_array
+
+    # print("original_parm_array: ", original_parm_array - parm_array)
+
+    np.savez(fname.replace(".h5", ".npz"), I=I, I_rot=I_rot, flux=flux, parm_array=parm_array, normalized_parm_array=normalized_parm_array, pa=pa, a=a, Te_unit=Te_unit, disk_h=disk_h, MBH=MBH, keplerian_factor=keplerian_factor, fluid_dirction=fluid_dirction)
+
+    I_rot_normalized = (I_rot / I_rot.max() * 255).astype(np.uint8)  # 归一化到 0-255 范围
+    image_I = Image.fromarray(I_rot_normalized, mode = 'L') 
+    # image_I.show()
+
+    # plt.imshow(I_rot, cmap='afmhot', vmin=0., vmax=I_rot.max(), origin='upper', interpolation='none')
+    # plt.show()
+
+    image_I.save(fname.replace(".h5", "_I.png"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # 读取偏振光强度图像
-    imagep = np.copy(hfp['pol']).transpose((1,0,2))
+    # imagep = np.copy(hfp['pol']).transpose((1,0,2))
     # 从 hfp 对象中通过键 'pol' 获取数据。这里假设 hfp 是一个已经打开的 HDF5 文件或类似支持字典访问方式的对象。
     # 使用 np.copy() 函数创建获取到的数据的一个副本，并将这个副本赋值给变量 imagep。
     # 对 imagep 进行转置操作，改变其维度顺序。原数据的维度顺序假设为 (宽度, 高度, 通道数)，转置后变为 (高度, 宽度, 通道数)。
 
     # 分离偏振图像的各分量
-    I = np.flip(imagep[:,:,0], axis=0)
-    Q = np.flip(imagep[:,:,1], axis=0)
-    U = np.flip(imagep[:,:,2], axis=0)
-    V = np.flip(imagep[:,:,3], axis=0)
+    # I = np.flip(imagep[:,:,0], axis=0)
+    # Q = np.flip(imagep[:,:,1], axis=0)
+    # U = np.flip(imagep[:,:,2], axis=0)
+    # V = np.flip(imagep[:,:,3], axis=0)
     # 关闭HDF5文件
-    hfp.close()
+   
 
     # FWHM = 20 muas
     # FWHM = 2*sqrt(2*ln(2)) * sigma 
     # 20 muas = 2*sqrt(2*ln(2))*sigma = 2*sqrt(2*ln(2)) * npix * (dw/D) * rad2muas 
     # sigma(pix) = npix = ...... 
-    nx = I.shape[0]
-    rad2muas = np.pi/180/3600/1000000
-    sigma = 10 / (2 * np.sqrt(2 * np.log(2))) / ((dx*lunit/nx)/(dsource)/rad2muas)
+    # nx = I.shape[0]
+    # rad2muas = np.pi/180/3600/1000000
+    # sigma = 10 / (2 * np.sqrt(2 * np.log(2))) / ((dx*lunit/nx)/(dsource)/rad2muas)
 
-    Ic = gaussian_filter(I, sigma)
+    # Ic = gaussian_filter(I, sigma)
 
     # c_cgs = 2.99792458e10
     # k_cgs = 1.38064852e-16
@@ -106,20 +179,20 @@ if __name__ == "__main__":
     # con_rot[con_rot<0] = 0
 
     # 设置图像显示范围
-    if FOV_UNITS == "muas":
-      extent = [ -fov_muas/2, fov_muas/2, -fov_muas/2, fov_muas/2 ]
-    elif FOV_UNITS == "M":
-      extent = [ -dx/2, dx/2, -dx/2, dx/2 ]
-    else:
-      # 如果视场单位未被识别，则输出错误信息并退出
-      print("! unrecognized units for FOV {0:s}. quitting.".format(FOV_UNITS))
+    # if FOV_UNITS == "muas":
+    #   extent = [ -fov_muas/2, fov_muas/2, -fov_muas/2, fov_muas/2 ]
+    # elif FOV_UNITS == "M":
+    #   extent = [ -dx/2, dx/2, -dx/2, dx/2 ]
+    # else:
+    #   # 如果视场单位未被识别，则输出错误信息并退出
+    #   print("! unrecognized units for FOV {0:s}. quitting.".format(FOV_UNITS))
 
-    # 将数组 I 转换为图像，并设置颜色映射
-    I_normalized = (I / I.max() * 255).astype(np.uint8)  # 归一化到 0-255 范围
-    image_I = Image.fromarray(I_normalized, mode='L')  # 创建灰度图像
+    # # 将数组 I 转换为图像，并设置颜色映射
+    # I_normalized = (I / I.max() * 255).astype(np.uint8)  # 归一化到 0-255 范围
+    # image_I = Image.fromarray(I_normalized, mode='L')  # 创建灰度图像
 
-    # 保存图像为 320x320 像素，避免插值
-    image_I.save(fname.replace(".h5", "_I.png"))
+    # # 保存图像为 320x320 像素，避免插值
+    # image_I.save(fname.replace(".h5", "_I.png"))
 
     # Ic_normalized = (Ic / Ic.max() * 255).astype(np.uint8)  # 归一化到 0-255 范围
     # image_Ic = Image.fromarray(Ic_normalized, mode='L')  # 创建灰度图像

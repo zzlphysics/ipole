@@ -1,7 +1,7 @@
 outfile image.h5
-a -0.9375
-Ne_unit 2e6
-Te_unit 10e10
+a 0.9375
+Ne_unit 3.0e7
+Te_unit 3.0e11
 nth0 1
 Te0 1
 disk_h 0.3
@@ -14,7 +14,7 @@ fluid_dirction -1.0
 emission_type 1
 
 rcam 1000
-thetacam 17
+thetacam 80
 phicam 0
 rotcam 0
 rmax_geo 300
@@ -22,11 +22,14 @@ rmax_geo 300
 fovx_dsource 160
 fovy_dsource 160
 
-nx 320
-ny 320
+nx 100
+ny 100
 
-dsource 16.8e6
+dsource 8.0e3
 
 freqcgs 230.e9
 
-MBH 6.5e9
+MBH 4.0e6
+
+xoff 0
+yoff 0

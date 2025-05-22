@@ -73,19 +73,23 @@ if __name__ == "__main__":
     # 读取未偏振光强度图像
     unpol = np.copy(hfp['unpol']).transpose((1,0))
     # 读取偏振光强度图像
-    imagep = np.copy(hfp['pol']).transpose((1,0,2))
+    # imagep = np.copy(hfp['pol']).transpose((1,0,2))
     # 从 hfp 对象中通过键 'pol' 获取数据。这里假设 hfp 是一个已经打开的 HDF5 文件或类似支持字典访问方式的对象。
     # 使用 np.copy() 函数创建获取到的数据的一个副本，并将这个副本赋值给变量 imagep。
     # 对 imagep 进行转置操作，改变其维度顺序。原数据的维度顺序假设为 (宽度, 高度, 通道数)，转置后变为 (高度, 宽度, 通道数)。
 
     # 分离偏振图像的各分量
-    I = np.flip(imagep[:,:,0], axis=0)
-    Q = np.flip(imagep[:,:,1], axis=0)
-    U = np.flip(imagep[:,:,2], axis=0)
-    V = np.flip(imagep[:,:,3], axis=0)
+    I = np.flip(unpol, axis=0)
+    Q = I
+    U = I
+    V = I
+    # Q = np.flip(imagep[:,:,1], axis=0)
+    # U = np.flip(imagep[:,:,2], axis=0)
+    # V = np.flip(imagep[:,:,3], axis=0)
     # 关闭HDF5文件
     hfp.close()
 
+    
     # FWHM = 20 muas
     # FWHM = 2*sqrt(2*ln(2)) * sigma 
     # 20 muas = 2*sqrt(2*ln(2))*sigma = 2*sqrt(2*ln(2)) * npix * (dw/D) * rad2muas 
@@ -96,8 +100,18 @@ if __name__ == "__main__":
 
     c_cgs = 2.99792458e10
     k_cgs = 1.38064852e-16
-    Tb = c_cgs**2/(2*freq**2*k_cgs) * I
+    Tb = c_cgs**2/(2*freq**2*k_cgs) * I * scale
 
+    I_normalized = I / I.max()
+    I_scale = 0.5/I_normalized.sum()
+    I_scaled = I_normalized * I_scale
+    Tb_scaled = c_cgs**2/(2*freq**2*k_cgs) * I_scaled
+    print("Tb_scaled.max(): ", Tb_scaled.max())
+
+    print("Tb.max(): ", Tb.max())
+    print("scale: ", scale)
+    print("fov_muas: ", fov_muas)
+    print("fov_muas**2/nx**2: ", fov_muas**2/nx**2)
     convolved_Tb = gaussian_filter(Tb, sigma)
     convolved_Q = gaussian_filter(Q, sigma)
     convolved_U = gaussian_filter(U, sigma)
@@ -137,8 +151,8 @@ if __name__ == "__main__":
     # 图1，I
     
     # 为总强度图像设置最大显示值
-    Imax = 1.e-4
-    Imax = I.max() /np.sqrt(1.5)
+    # Imax = 1.e-4
+    Imax = I.max()# /np.sqrt(1.5)
     # 显示总强度图像
     im1 = ax1.imshow(I, cmap='afmhot', vmin=0., vmax=Imax, origin='upper', extent=extent)
     # 添加颜色条
