@@ -293,14 +293,14 @@ void dump_var_along(int i, int j, int nstep, struct of_traj *traj, int nx, int n
   int nsteps = nstep + 1;
   double *prims = calloc(nprims*nsteps, sizeof(double));
 
-  double *b = calloc(nsteps, sizeof(double));
-  double *ne = calloc(nsteps, sizeof(double));
-  double *thetae = calloc(nsteps, sizeof(double));
+  // double *b = calloc(nsteps, sizeof(double));
+  // double *ne = calloc(nsteps, sizeof(double));
+  // double *thetae = calloc(nsteps, sizeof(double));
   double *nu = calloc(nsteps, sizeof(double));
   double *mu = calloc(nsteps, sizeof(double));
 
-  double *sigma = calloc(nsteps, sizeof(double));
-  double *beta = calloc(nsteps, sizeof(double));
+  // double *sigma = calloc(nsteps, sizeof(double));
+  // double *beta = calloc(nsteps, sizeof(double));
 
   double *dl = calloc(nsteps, sizeof(double));
   double *X = calloc(NDIM*nsteps, sizeof(double));
@@ -358,13 +358,13 @@ void dump_var_along(int i, int j, int nstep, struct of_traj *traj, int nx, int n
     get_model_fourv(traj[i].X, traj[i].Kcon, Ucont, Ucovt, Bcont, Bcovt);
 
     // Record scaled values
-    b[i] = get_model_b(traj[i].X);
-    ne[i] = get_model_ne(traj[i].X);
-    thetae[i] = get_model_thetae(traj[i].X);
+    // b[i] = get_model_b(traj[i].X);
+    // ne[i] = get_model_ne(traj[i].X);
+    // thetae[i] = get_model_thetae(traj[i].X);
     nu[i] = get_fluid_nu(traj[i].Kcon, Ucovt);
     mu[i] = get_bk_angle(traj[i].X, traj[i].Kcon, Ucovt, Bcont, Bcovt);
-    sigma[i] = get_model_sigma(traj[i].X);
-    beta[i] = get_model_beta(traj[i].X);
+    // sigma[i] = get_model_sigma(traj[i].X);
+    // beta[i] = get_model_beta(traj[i].X);
 
     // Record emission coefficients
     jar_calc(traj[i].X, traj[i].Kcon, &(j_inv[i*NDIM]), &(j_inv[i*NDIM+1]), &(j_inv[i*NDIM+2]), &(j_inv[i*NDIM+3]),
@@ -453,22 +453,22 @@ void dump_var_along(int i, int j, int nstep, struct of_traj *traj, int nx, int n
   hsize_t mdims_s[] =  { 1, 1, nsteps };
   hsize_t mstart_s[] = { 0, 0, 0 };
 
-  hdf5_write_chunked_array(b, "b", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(ne, "ne", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(thetae, "thetae", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(nu, "nu", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(mu, "b_k_angle", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(sigma, "sigma", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(beta, "beta", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(b, "b", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(ne, "ne", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(thetae, "thetae", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(nu, "nu", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(mu, "b_k_angle", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(sigma, "sigma", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(beta, "beta", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
 
   hdf5_write_chunked_array(dl, "dl", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
   hdf5_write_chunked_array(r, "r", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
   hdf5_write_chunked_array(th, "th", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
   hdf5_write_chunked_array(phi, "phi", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
 
-  hdf5_write_chunked_array(j_unpol, "j_unpol", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(k_unpol, "k_unpol", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(I_unpol, "I_unpol", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(j_unpol, "j_unpol", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(k_unpol, "k_unpol", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(I_unpol, "I_unpol", 3, fdims_s, fstart_s, fcount_s, mdims_s, mstart_s, chunk_s, H5T_IEEE_F64LE);
 
   // VECTORS: Anything with N values per geodesic step
   hsize_t fdims_v[] = { nx, ny, params->maxnstep, 4 };
@@ -478,8 +478,8 @@ void dump_var_along(int i, int j, int nstep, struct of_traj *traj, int nx, int n
   hsize_t mdims_v[] =  { 1, 1, nsteps, 4 };
   hsize_t mstart_v[] = { 0, 0, 0, 0 };
 
-  hdf5_write_chunked_array(X, "X", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(Kcon, "Kcon", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(X, "X", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(Kcon, "Kcon", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
 //  hdf5_write_chunked_array(Kcov, "Kcov", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
 
 //  hdf5_write_chunked_array(Ucon, "Ucon", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
@@ -488,41 +488,41 @@ void dump_var_along(int i, int j, int nstep, struct of_traj *traj, int nx, int n
 //  hdf5_write_chunked_array(Bcov, "Bcov", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
 
   hdf5_write_chunked_array(j_inv, "j_inv", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(alpha_inv, "alpha_inv", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(rho_inv, "rho_inv", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(alpha_inv, "alpha_inv", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(rho_inv, "rho_inv", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
 
   hdf5_write_chunked_array(stokes, "stokes", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
   // hdf5_write_chunked_array(stokes_coordinate, "stokes_coordinate", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
 
-  hdf5_write_chunked_array(e2Constructed, "e2Constructed", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(e2ConstructedCov, "e2ConstructedCov", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(e2Transported, "e2Transported", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(e2TransportedCov, "e2TransportedCov", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(e2Constructed, "e2Constructed", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(e2ConstructedCov, "e2ConstructedCov", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(e2Transported, "e2Transported", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(e2TransportedCov, "e2TransportedCov", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
 
-  fdims_v[3] = chunk_v[3] = fcount_v[3] = mdims_v[3] = 8;
-  hdf5_write_chunked_array(prims, "prims", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
+  // fdims_v[3] = chunk_v[3] = fcount_v[3] = mdims_v[3] = 8;
+  // hdf5_write_chunked_array(prims, "prims", 4, fdims_v, fstart_v, fcount_v, mdims_v, mstart_v, chunk_v, H5T_IEEE_F64LE);
 
   // TENSORS: Anything with NxN values per geodesic step
-  hsize_t fdims_t[] = { nx, ny, params->maxnstep, 4, 4 };
-  hsize_t chunk_t[] =  { 1, 1, 200, 4, 4 };
-  hsize_t fstart_t[] = { i, j, 0, 0, 0 };
-  hsize_t fcount_t[] = { 1, 1, nsteps, 4, 4 };
-  hsize_t mdims_t[] =  { 1, 1, nsteps, 4, 4 };
-  hsize_t mstart_t[] = { 0, 0, 0, 0, 0 };
-  hdf5_write_chunked_array(ntetrad, "ntetrad", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(ncoord, "ncoord", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(econ, "Econ", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
-  hdf5_write_chunked_array(ecov, "Ecov", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
+  // hsize_t fdims_t[] = { nx, ny, params->maxnstep, 4, 4 };
+  // hsize_t chunk_t[] =  { 1, 1, 200, 4, 4 };
+  // hsize_t fstart_t[] = { i, j, 0, 0, 0 };
+  // hsize_t fcount_t[] = { 1, 1, nsteps, 4, 4 };
+  // hsize_t mdims_t[] =  { 1, 1, nsteps, 4, 4 };
+  // hsize_t mstart_t[] = { 0, 0, 0, 0, 0 };
+  // hdf5_write_chunked_array(ntetrad, "ntetrad", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(ncoord, "ncoord", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(econ, "Econ", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
+  // hdf5_write_chunked_array(ecov, "Ecov", 5, fdims_t, fstart_t, fcount_t, mdims_t, mstart_t, chunk_t, H5T_IEEE_F64LE);
 
   // DEALLOCATE
 
   // Scalars
-  free(b); free(ne); free(thetae);
+  // free(b); free(ne); free(thetae);
   free(nu); free(mu);
   free(dl);
   free(r); free(th); free(phi);
   free(j_unpol); free(k_unpol); free(I_unpol);
-  free(sigma); free(beta);
+  // free(sigma); free(beta);
 
   // Vectors
   free(X);
