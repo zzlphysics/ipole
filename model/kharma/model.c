@@ -2554,6 +2554,7 @@ void load_kharma_data(int n, char *fnam, int dumpidx, int verbose)
   hsize_t mdims[] = {1, n3_block, n2_block, n1_block};
   hsize_t fstart[] = {0, 0, 0, 0};
   hsize_t mstart[] = {0, 0, 0, 0};
+  hsize_t mstart5[] = {0, 0, 0, 0, 0};
   hsize_t count[] = {1, n3_block, n2_block, n1_block};
 
   for(int mb = 0; mb < n_meshblocks; mb++) {
@@ -2606,7 +2607,7 @@ void load_kharma_data(int n, char *fnam, int dumpidx, int verbose)
     for(int v = 0; v < 3; v++) {
       uvec_start[1] = v;
       hdf5_read_array(block_data, "/prims.uvec", 5, uvec_dims, uvec_start, uvec_count,
-                      uvec_mdims, mstart, H5T_IEEE_F64LE);
+                      uvec_mdims, mstart5, H5T_IEEE_F64LE);
 
       // If v == 0, output block_data[i=0, j=0, k] over all k
       // if (v == 1) {
@@ -2634,7 +2635,7 @@ void load_kharma_data(int n, char *fnam, int dumpidx, int verbose)
     for(int v = 0; v < 3; v++) {
       b_start[1] = v;
       hdf5_read_array(block_data, "/prims.B", 5, b_dims, b_start, b_count,
-                      b_mdims, mstart, H5T_IEEE_F64LE);
+                      b_mdims, mstart5, H5T_IEEE_F64LE);
       
       for(int i = 0; i < n1_block; i++)
         for(int j = 0; j < n2_block; j++)
