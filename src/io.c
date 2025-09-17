@@ -89,8 +89,9 @@ void write_restart(const char *fname, double tA, double tB, double last_img_targ
 
   hdf5_create(fname);
 
-  hid_t dtype_version = hdf5_make_str_type(strlen(xstr(VERSION)));
+  hid_t dtype_version = hdf5_make_str_type(strlen(xstr(VERSION)) + 1);
   hdf5_add_attr(xstr(VERSION), "githash", "/", dtype_version);
+  H5Tclose(dtype_version);
   hdf5_write_single_val(&tA, "/tA", H5T_IEEE_F64LE);
   hdf5_write_single_val(&tB, "/tB", H5T_IEEE_F64LE);
   hdf5_write_single_val(&last_img_target, "/last_img_target", H5T_STD_I32LE);
@@ -140,13 +141,21 @@ void write_restart(const char *fname, double tA, double tB, double last_img_targ
 void write_header(double scale, double cam[NDIM],
     double fovx, double fovy, Params *params)
 {
-  hid_t dtype_version = hdf5_make_str_type(20);
-  hdf5_add_attr(xstr(VERSION), "githash", "/", dtype_version);
+  size_t len_githash = strlen(xstr(VERSION)) + 1;
+  hid_t dtype_githash = hdf5_make_str_type(len_githash);
+  hdf5_add_attr(xstr(VERSION), "githash", "/", dtype_githash);
+  H5Tclose(dtype_githash);
 
   hdf5_make_directory("header");
   hdf5_set_directory("/header/");
+  size_t len_version = strlen(VERSION_STRING) + 1;
+  hid_t dtype_version = hdf5_make_str_type(len_version);
   hdf5_write_single_val(VERSION_STRING, "version", dtype_version);
-  hdf5_write_single_val(xstr(VERSION), "githash", dtype_version);
+  H5Tclose(dtype_version);
+  len_githash = strlen(xstr(VERSION)) + 1;
+  dtype_githash = hdf5_make_str_type(len_githash);
+  hdf5_write_single_val(xstr(VERSION), "githash", dtype_githash);
+  H5Tclose(dtype_githash);
   // Make locals for things we'll use later
   double freqcgs = params->freqcgs;
   double dsource = params->dsource;
