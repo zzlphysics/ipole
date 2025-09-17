@@ -18,7 +18,7 @@ int read_line(FILE *fp, char **line, char *message);
 int read_int(FILE *fp, size_t bytes);
 double read_double(FILE *fp, size_t bytes);
 
-int is_within_meshblock(size_t mb, double x1, double x2, double x3);
+int is_within_meshblock(int mb, double x1, double x2, double x3);
 int get_meshblock(double x1, double x2, double x3);
 
 #endif // MODEL_PARAMS_H

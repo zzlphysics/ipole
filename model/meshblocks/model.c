@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 // macros
 #define NSUP (3)  // how many files to load for slow light tracing
@@ -221,13 +222,20 @@ double get_athenak_dump_time(char *fname)
   fp = fopen(fname, "rb");
 
   fseek(fp, 0, SEEK_SET);
-  if (read_line(fp, &line, "! unable to read file header.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read file header.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   if (strcmp(line, "Athena binary output version=1.1\n") != 0) {
     fprintf(stderr, "! got bad file header: %s\n", line);
+    fclose(fp);
     return -1;
   }
 
-  if (read_line(fp, &line, "! unable to read header line.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read header line.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   get_line_token(line, "=", 1, &res);
   int preheader_size = atoi(res);
   for (int i=0; i<preheader_size-1; ++i) {
@@ -328,8 +336,9 @@ double read_double(FILE *fp, size_t bytes)
   return dval;
 }
 
-int is_within_meshblock(size_t mb, double x1, double x2, double x3)
+int is_within_meshblock(int mb, double x1, double x2, double x3)
 {
+  if (mb < 0 || mb >= (int)n_meshblocks) return 0;
   if (x1 < meshblock_geometry[6*mb+0]) return 0;
   if (x1 >= meshblock_geometry[6*mb+1]) return 0;
   if (x2 < meshblock_geometry[6*mb+2]) return 0;
@@ -342,8 +351,10 @@ int is_within_meshblock(size_t mb, double x1, double x2, double x3)
 // assumes x1, x2, x3 in the same coordinates as the logical meshblock grid
 int get_meshblock(double x1, double x2, double x3)
 {
-  if (is_within_meshblock(last_mb, x1, x2, x3)) {
-    return last_mb;
+  if (last_mb >= 0 && last_mb < (int)n_meshblocks) {
+    if (is_within_meshblock(last_mb, x1, x2, x3)) {
+      return last_mb;
+    }
   }
 
   for (int mb=0; mb<n_meshblocks; ++mb) {
@@ -400,6 +411,12 @@ void set_meshblock_indices(double X[NDIM], int *mbn, int *i, int *j, int *k, dou
   int mb = get_meshblock(x, y, z);
   *mbn = mb;
 
+  if (mb < 0) {
+    *i = *j = *k = 0;
+    *di = *dj = *dk = 0.0;
+    return;
+  }
+
   double xmin = meshblock_geometry[6*mb + 0];
   double xmax = meshblock_geometry[6*mb + 1];
   double ymin = meshblock_geometry[6*mb + 2];
@@ -424,6 +441,7 @@ void set_meshblock_indices(double X[NDIM], int *mbn, int *i, int *j, int *k, dou
 
 double mb_interp_scalar(int mb, double x, double y, double z, double ****var)
 {
+  if (mb < 0) return 0.0;
   double xmin = meshblock_geometry[6*mb + 0];
   double xmax = meshblock_geometry[6*mb + 1];
   double ymin = meshblock_geometry[6*mb + 2];
@@ -776,21 +794,34 @@ size_t get_athenak_datastart(char *fname)
   fp = fopen(fname, "rb");
 
   fseek(fp, 0, SEEK_SET);
-  if (read_line(fp, &line, "! unable to read file header.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read file header.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   if (strcmp(line, "Athena binary output version=1.1\n") != 0) {
     fprintf(stderr, "! got bad file header: %s\n", line);
+    fclose(fp);
     return -1;
   }
 
-  if (read_line(fp, &line, "! unable to read header line.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read header line.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   get_line_token(line, "=", 1, &res);
   int preheader_size = atoi(res);
   for (int i=0; i<preheader_size-1; ++i) {
     read_line(fp, &line, "! unable to read preheader line\n");
   }
 
-  if (read_line(fp, &line, "! unable to read number of variables.\n") == -1) return -1;
-  if (read_line(fp, &line, "! unable to read variable names.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read number of variables.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
+  if (read_line(fp, &line, "! unable to read variable names.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
 
   // deal with header
   read_set_athenak_header(fp, NULL);
@@ -816,13 +847,20 @@ size_t process_athenak_header(char *fnam, int index)
   size_t filesize = ftell(fp);
 
   fseek(fp, 0, SEEK_SET);
-  if (read_line(fp, &line, "! unable to read file header.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read file header.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   if (strcmp(line, "Athena binary output version=1.1\n") != 0) {
     fprintf(stderr, "! got bad file header: %s\n", line);
+    fclose(fp);
     return -1;
   }
 
-  if (read_line(fp, &line, "! unable to read header line.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read header line.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   get_line_token(line, "=", 1, &res);
   int preheader_size = atoi(res);
   for (int i=0; i<preheader_size-1; ++i) {
@@ -836,15 +874,21 @@ size_t process_athenak_header(char *fnam, int index)
     dict_add(model_params, key, value);
   }
 
-  if (read_line(fp, &line, "! unable to read number of variables.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read number of variables.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   get_line_token(line, "=", 1, &res);
   n_variables = atoi(res);
-  if (read_line(fp, &line, "! unable to read variable names.\n") == -1) return -1;
+  if (read_line(fp, &line, "! unable to read variable names.\n") == -1) {
+    fclose(fp);
+    return -1;
+  }
   // TODO process variable names in "line"?
 
   // deal with header
   read_set_athenak_header(fp, model_params);
-  adiabatic_gamma = atof(dict_get(model_params, "gamma", "1.4444444444444"));
+  adiabatic_gamma = atof(dict_get(model_params, "mhd/gamma", "1.4444444444444"));
 
   size_t datastart = ftell(fp);
   fclose(fp);
@@ -1111,6 +1155,10 @@ void load_athenak_data(int n, char *fnam, int index, size_t datastart)
     idum = read_int(fp, 4);
     idum = read_int(fp, 4);
     idum = read_int(fp, 4);
+    if (nmb >= n_meshblocks) {
+      fprintf(stderr, "Error: file contains more meshblocks than allocated: nmb=%zu, n_meshblocks=%zu\n", (size_t)nmb, n_meshblocks);
+      exit(2);
+    }
     meshblock_levels[nmb] = idum;
 
     double xmin = read_double(fp, locsize);
@@ -1120,6 +1168,10 @@ void load_athenak_data(int n, char *fnam, int index, size_t datastart)
     double zmin = read_double(fp, locsize);
     double zmax = read_double(fp, locsize);
 
+    if (nmb >= n_meshblocks) {
+      fprintf(stderr, "Error: meshblock index out of range when writing geometry: nmb=%zu, n_meshblocks=%zu\n", (size_t)nmb, n_meshblocks);
+      exit(2);
+    }
     meshblock_geometry[nmb*6 + 0] = xmin;
     meshblock_geometry[nmb*6 + 1] = xmax;
     meshblock_geometry[nmb*6 + 2] = ymin;
@@ -1140,6 +1192,10 @@ void load_athenak_data(int n, char *fnam, int index, size_t datastart)
         for (int k=0; k<mb_nx3; ++k) {
           for (int j=0; j<mb_nx2; ++j) {
             for (int i=0; i<mb_nx1; ++i) {
+              if (nmb >= n_meshblocks) {
+                fprintf(stderr, "Error: meshblock index out of range when writing variables (double): nmb=%zu, n_meshblocks=%zu\n", (size_t)nmb, n_meshblocks);
+                exit(2);
+              }
               data[n]->p[v][nmb][i+1][j+1][k+1] = dptr[index++];
             }
           }
@@ -1152,6 +1208,10 @@ void load_athenak_data(int n, char *fnam, int index, size_t datastart)
         for (int k=0; k<mb_nx3; ++k) {
           for (int j=0; j<mb_nx2; ++j) {
             for (int i=0; i<mb_nx1; ++i) {
+              if (nmb >= n_meshblocks) {
+                fprintf(stderr, "Error: meshblock index out of range when writing variables (float): nmb=%zu, n_meshblocks=%zu\n", (size_t)nmb, n_meshblocks);
+                exit(2);
+              }
               data[n]->p[v][nmb][i+1][j+1][k+1] = (double)fptr[index++];
             }
           }
@@ -1163,6 +1223,10 @@ void load_athenak_data(int n, char *fnam, int index, size_t datastart)
     }
 
     nmb++;
+    if (nmb > n_meshblocks) {
+      fprintf(stderr, "Error: read more meshblocks (%zu) than allocated (%zu)\n", (size_t)nmb, n_meshblocks);
+      exit(2);
+    }
   }
 
   free(raw_buffer);
