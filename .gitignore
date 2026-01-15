@@ -20,6 +20,11 @@ test-resources
 *.ppm
 *.mp4
 *.vtk
+
+# vscode
+.vscode/*
+
+# Logs and output
 *.log
 *.out
 *.err
